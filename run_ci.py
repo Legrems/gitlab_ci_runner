@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('location')
 parser.add_argument('--stage', nargs='+', type=str)
+parser.add_argument('--list-stages', action='store_true')
 
 args = parser.parse_args()
 
@@ -36,13 +37,18 @@ def search_near_gitlab_ci(location):
     return False, ''
 
 
-def run_ci(location, ci_file, stage_to_run):
+def run_ci(location, ci_file, stage_to_run, args):
     print('Running ci on {} with file {}'.format(location, ci_file))
 
-    command_to_skip = ['image', 'before_script', 'stages']
+    command_to_skip = ['image', 'before_script', 'stages', 'variables', 'services']
 
     with open(ci_file, 'r') as file:
         y = yaml.load(file, Loader=yaml.FullLoader)
+
+        if args.list_stages:
+            for k in y.keys():
+                print(' * \033[92;1m{}\033[0m'.format(k))
+            return
 
         if stage_to_run == '__all__':
             stage_to_run = y.keys()
@@ -71,4 +77,4 @@ stages = args.stage
 if not stages:
     stages = '__all__'
 
-run_ci(location, ci_file, stages)
+run_ci(location, ci_file, stages, args)
